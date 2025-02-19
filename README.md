@@ -47,7 +47,7 @@ The PreLiquidation smart-contract enforces the properties:
 
 Note: A pre-liquidation close factor higher than 100% means that the whole position is pre-liquidatable, so using `preLCF2 > 1` allows to make the position entirely pre-liquidatable at a LTV between preLltv and LLTV.
 
-The property `preLIF2 <= 1 / LLTV` ensures that pre-liquidation always improves the health of the position.
+The property `preLIF2 <= 1 / LLTV` and the fact that pre-liquidations are only allowed for `LTV <= LLTV` ensure that pre-liquidations can't worsen the health of the position.
 
 ### `onPreLiquidate` callback
 
