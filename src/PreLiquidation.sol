@@ -46,6 +46,7 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
     uint256 internal immutable PRE_LIF_1;
     uint256 internal immutable PRE_LIF_2;
     address internal immutable PRE_LIQUIDATION_ORACLE;
+    address internal immutable RISK_ORACLE;
 
     /// @notice The Morpho market parameters specific to the PreLiquidation contract.
     function marketParams() public view returns (MarketParams memory) {
@@ -76,20 +77,28 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
     /// @param morpho The address of the Morpho contract.
     /// @param id The id of the Morpho market on which pre-liquidations will occur.
     /// @param _preLiquidationParams The pre-liquidation parameters.
+    /// @param riskOracle The address of the risk oracle contract.
     /// @dev The following requirements should be met:
     /// - preLltv < LLTV;
     /// - preLCF1 <= preLCF2;
     /// - preLCF1 <= 1;
     /// - 1 <= preLIF1 <= preLIF2 <= 1 / LLTV.
-    constructor(address morpho, Id id, PreLiquidationParams memory _preLiquidationParams) {
+    constructor(
+        address morpho, 
+        Id id, 
+        PreLiquidationParams memory _preLiquidationParams,
+        address riskOracle
+    ) {
         require(IMorpho(morpho).market(id).lastUpdate != 0, ErrorsLib.NonexistentMarket());
         MarketParams memory _marketParams = IMorpho(morpho).idToMarketParams(id);
-        require(_preLiquidationParams.preLltv < _marketParams.lltv, ErrorsLib.PreLltvTooHigh());
+        // Modified to allow preLltv == lltv as that is our core value prop and expected default
+        require(_preLiquidationParams.preLltv <= _marketParams.lltv, ErrorsLib.PreLltvTooHigh());
         require(_preLiquidationParams.preLCF1 <= _preLiquidationParams.preLCF2, ErrorsLib.PreLCFDecreasing());
         require(_preLiquidationParams.preLCF1 <= WAD, ErrorsLib.PreLCFTooHigh());
         require(WAD <= _preLiquidationParams.preLIF1, ErrorsLib.PreLIFTooLow());
         require(_preLiquidationParams.preLIF1 <= _preLiquidationParams.preLIF2, ErrorsLib.PreLIFDecreasing());
         require(_preLiquidationParams.preLIF2 <= WAD.wDivDown(_marketParams.lltv), ErrorsLib.PreLIFTooHigh());
+        // TODO preLCF1 should == preLCF2, and preLIF1 should = preLIF2 always in our design
 
         MORPHO = IMorpho(morpho);
 
@@ -107,6 +116,7 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         PRE_LIF_1 = _preLiquidationParams.preLIF1;
         PRE_LIF_2 = _preLiquidationParams.preLIF2;
         PRE_LIQUIDATION_ORACLE = _preLiquidationParams.preLiquidationOracle;
+        RISK_ORACLE = riskOracle;
 
         ERC20(_marketParams.loanToken).safeApprove(morpho, type(uint256).max);
     }
@@ -145,13 +155,14 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         uint256 borrowed = uint256(position.borrowShares).toAssetsUp(market.totalBorrowAssets, market.totalBorrowShares);
 
         // The two following require-statements ensure that collateralQuoted is different from zero.
+        // TODO: see if we need to remove this since we expect ltv == PRE_LLTV.
         require(borrowed <= collateralQuoted.wMulDown(LLTV), ErrorsLib.LiquidatablePosition());
         // The following require-statement is equivalent to checking that ltv > PRE_LLTV.
+        // TODO: see if we need to remove this since we expect ltv == PRE_LLTV. 
         require(borrowed > collateralQuoted.wMulDown(PRE_LLTV), ErrorsLib.NotPreLiquidatablePosition());
 
-        uint256 ltv = borrowed.wDivUp(collateralQuoted);
-        uint256 quotient = (ltv - PRE_LLTV).wDivDown(LLTV - PRE_LLTV);
-        uint256 preLIF = quotient.wMulDown(PRE_LIF_2 - PRE_LIF_1) + PRE_LIF_1;
+        uint256 preLIF = ILiquidationDataFeed(RISK_ORACLE).getLatestPenalty();
+        require(preLIF <= PRE_LIF_1 && preLIF <= PRE_LIF_2, "LIF out of bounds");
 
         if (seizedAssets > 0) {
             uint256 seizedAssetsQuoted = seizedAssets.mulDivUp(collateralPrice, ORACLE_PRICE_SCALE);
@@ -166,7 +177,8 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
 
         // Note that the pre-liquidation close factor can be greater than WAD (100%).
         // In this case the position can be fully pre-liquidated.
-        uint256 preLCF = quotient.wMulDown(PRE_LCF_2 - PRE_LCF_1) + PRE_LCF_1;
+        uint256 preLCF = ILiquidationDataFeed(RISK_ORACLE).getLatestCloseFactor();
+        require(preLCF <= PRE_LCF_1 && preLCF <= PRE_LCF_2, "LCF out of bounds");
 
         uint256 repayableShares = uint256(position.borrowShares).wMulDown(preLCF);
         require(repaidShares <= repayableShares, ErrorsLib.PreLiquidationTooLarge(repaidShares, repayableShares));
