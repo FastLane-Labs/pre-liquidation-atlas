@@ -155,10 +155,12 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         uint256 borrowed = uint256(position.borrowShares).toAssetsUp(market.totalBorrowAssets, market.totalBorrowShares);
 
         // The two following require-statements ensure that collateralQuoted is different from zero.
-        // TODO: see if we need to remove this since we expect ltv == PRE_LLTV.
+        // TODO: verify what happens if we remove this line, I think it would just allow pre liquidations
+        // on already unhealthy positions in Morpho. We should be fine to leave this since we expect the position
+        // to still be healthy on Morpho because we have only updated the Pre Liquidation Oracle at this point. 
         require(borrowed <= collateralQuoted.wMulDown(LLTV), ErrorsLib.LiquidatablePosition());
         // The following require-statement is equivalent to checking that ltv > PRE_LLTV.
-        // TODO: see if we need to remove this since we expect ltv == PRE_LLTV. 
+        // TODO: check, but probably we need to remove below line or modify it since we expect ltv == PRE_LLTV. 
         require(borrowed > collateralQuoted.wMulDown(PRE_LLTV), ErrorsLib.NotPreLiquidatablePosition());
 
         uint256 preLIF = ILiquidationDataFeed(RISK_ORACLE).getLatestPenalty();
