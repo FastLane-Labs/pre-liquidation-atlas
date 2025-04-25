@@ -9,7 +9,7 @@ interface IPreLiquidationFactory {
 
     function isPreLiquidation(address) external returns (bool);
 
-    function createPreLiquidation(Id id, PreLiquidationParams calldata preLiquidationParams)
+    function createPreLiquidation(Id id, PreLiquidationParams calldata preLiquidationParams, address riskOracle)
         external
         returns (IPreLiquidation preLiquidation);
 }

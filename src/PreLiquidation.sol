@@ -6,6 +6,7 @@ import {IMorphoRepayCallback} from "../lib/morpho-blue/src/interfaces/IMorphoCal
 import {IPreLiquidation, PreLiquidationParams} from "./interfaces/IPreLiquidation.sol";
 import {IPreLiquidationCallback} from "./interfaces/IPreLiquidationCallback.sol";
 import {IOracle} from "../lib/morpho-blue/src/interfaces/IOracle.sol";
+import {IRiskOracle} from "./interfaces/IRiskOracle.sol";
 
 import {ORACLE_PRICE_SCALE} from "../lib/morpho-blue/src/libraries/ConstantsLib.sol";
 import {SharesMathLib} from "../lib/morpho-blue/src/libraries/SharesMathLib.sol";
@@ -163,7 +164,7 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         // TODO: check, but probably we need to remove below line or modify it since we expect ltv == PRE_LLTV. 
         require(borrowed > collateralQuoted.wMulDown(PRE_LLTV), ErrorsLib.NotPreLiquidatablePosition());
 
-        uint256 preLIF = ILiquidationDataFeed(RISK_ORACLE).getLatestPenalty();
+        (uint256 preLIF, uint256 preLCF) = IRiskOracle(RISK_ORACLE).getRiskParameters();
         require(preLIF <= PRE_LIF_1 && preLIF <= PRE_LIF_2, "LIF out of bounds");
 
         if (seizedAssets > 0) {
@@ -179,7 +180,6 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
 
         // Note that the pre-liquidation close factor can be greater than WAD (100%).
         // In this case the position can be fully pre-liquidated.
-        uint256 preLCF = ILiquidationDataFeed(RISK_ORACLE).getLatestCloseFactor();
         require(preLCF <= PRE_LCF_1 && preLCF <= PRE_LCF_2, "LCF out of bounds");
 
         uint256 repayableShares = uint256(position.borrowShares).wMulDown(preLCF);

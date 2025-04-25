@@ -39,13 +39,14 @@ contract PreLiquidationFactory is IPreLiquidationFactory {
     /// @notice Creates a PreLiquidation contract.
     /// @param id The Morpho market for PreLiquidations.
     /// @param preLiquidationParams The PreLiquidation params for the PreLiquidation contract.
+    /// @param riskOracle The address of the RiskOracle contract. Can be set to address(0) if not needed.
     /// @dev Warning: This function will revert without data if the pre-liquidation already exists.
-    function createPreLiquidation(Id id, PreLiquidationParams calldata preLiquidationParams)
+    function createPreLiquidation(Id id, PreLiquidationParams calldata preLiquidationParams, address riskOracle)
         external
         returns (IPreLiquidation)
     {
         IPreLiquidation preLiquidation =
-            IPreLiquidation(address(new PreLiquidation{salt: 0}(address(MORPHO), id, preLiquidationParams)));
+            IPreLiquidation(address(new PreLiquidation{salt: 0}(address(MORPHO), id, preLiquidationParams, riskOracle)));
 
         emit EventsLib.CreatePreLiquidation(address(preLiquidation), id, preLiquidationParams);
 

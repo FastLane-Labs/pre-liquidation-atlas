@@ -107,7 +107,7 @@ contract BaseTest is Test {
         uint256 borrowAmount,
         address liquidator
     ) internal {
-        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams);
+        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
 
         loanToken.mint(SUPPLIER, borrowAmount);
         vm.prank(SUPPLIER);

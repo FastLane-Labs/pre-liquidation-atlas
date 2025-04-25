@@ -34,7 +34,7 @@ contract PreLiquidationFactoryTest is BaseTest {
         preLiquidationParams.preLCF2 = preLiquidationParams.preLCF1;
 
         factory = new PreLiquidationFactory(address(MORPHO));
-        IPreLiquidation preLiquidation = factory.createPreLiquidation(id, preLiquidationParams);
+        IPreLiquidation preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
 
         assert(preLiquidation.MORPHO() == MORPHO);
         assert(Id.unwrap(preLiquidation.ID()) == Id.unwrap(id));
@@ -72,7 +72,7 @@ contract PreLiquidationFactoryTest is BaseTest {
         preLiquidationParams.preLCF2 = preLiquidationParams.preLCF1;
 
         factory = new PreLiquidationFactory(address(MORPHO));
-        IPreLiquidation preLiquidation = factory.createPreLiquidation(id, preLiquidationParams);
+        IPreLiquidation preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
 
         address preLiquidationAddress = PreLiquidationAddressLib.computePreLiquidationAddress(
             address(MORPHO), address(factory), id, preLiquidationParams
@@ -96,9 +96,9 @@ contract PreLiquidationFactoryTest is BaseTest {
 
         factory = new PreLiquidationFactory(address(MORPHO));
 
-        factory.createPreLiquidation(id, preLiquidationParams);
+        factory.createPreLiquidation(id, preLiquidationParams, address(0));
 
         vm.expectRevert(bytes(""));
-        factory.createPreLiquidation(id, preLiquidationParams);
+        factory.createPreLiquidation(id, preLiquidationParams, address(0));
     }
 }
