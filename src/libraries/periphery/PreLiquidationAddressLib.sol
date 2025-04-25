@@ -17,10 +17,11 @@ library PreLiquidationAddressLib {
         address morpho,
         address factory,
         Id id,
-        PreLiquidationParams memory preLiquidationParams
+        PreLiquidationParams memory preLiquidationParams,
+        address riskOracle
     ) internal pure returns (address) {
         bytes32 initCodeHash =
-            keccak256(abi.encodePacked(type(PreLiquidation).creationCode, abi.encode(morpho, id, preLiquidationParams)));
+            keccak256(abi.encodePacked(type(PreLiquidation).creationCode, abi.encode(morpho, id, preLiquidationParams, riskOracle)));
         return address(uint160(uint256(keccak256(abi.encodePacked(uint8(0xff), factory, uint256(0), initCodeHash)))));
     }
 }
