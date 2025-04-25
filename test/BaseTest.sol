@@ -17,6 +17,7 @@ import {UtilsLib} from "../lib/morpho-blue/src/libraries/UtilsLib.sol";
 
 import {PreLiquidationParams, IPreLiquidation} from "../src/interfaces/IPreLiquidation.sol";
 import {PreLiquidationFactory} from "../src/PreLiquidationFactory.sol";
+import {RiskOracle} from "../src/RiskOracle.sol";
 
 contract BaseTest is Test {
     using MarketParamsLib for MarketParams;
@@ -43,6 +44,8 @@ contract BaseTest is Test {
 
     PreLiquidationFactory internal factory;
     IPreLiquidation internal preLiquidation;
+
+    RiskOracle internal riskOracle;
 
     function setUp() public virtual {
         vm.label(address(MORPHO), "Morpho");
@@ -79,6 +82,15 @@ contract BaseTest is Test {
 
         vm.prank(BORROWER);
         collateralToken.approve(address(MORPHO), type(uint256).max);
+
+        address riskFactorOperator = makeAddr("RiskFactorOperator");
+        riskOracle = new RiskOracle();
+        riskOracle.setRiskOracleOperator(riskFactorOperator);
+
+        vm.prank(riskFactorOperator);
+        uint256 preLif = 5000;
+        uint256 preLcf = 5000;
+        riskOracle.setRiskParameters(preLif, preLcf);
     }
 
     function boundPreLiquidationParameters(
@@ -107,7 +119,7 @@ contract BaseTest is Test {
         uint256 borrowAmount,
         address liquidator
     ) internal {
-        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
 
         loanToken.mint(SUPPLIER, borrowAmount);
         vm.prank(SUPPLIER);
@@ -136,15 +148,19 @@ contract BaseTest is Test {
         view
         returns (uint256)
     {
-        return (ltv - preLiquidationParams.preLltv).wDivDown(marketParams.lltv - preLiquidationParams.preLltv).wMulDown(
-            preLiquidationParams.preLCF2 - preLiquidationParams.preLCF1
-        ) + preLiquidationParams.preLCF1;
+        (uint256 preLif, uint256 preLcf) = riskOracle.getRiskParameters();
+        return preLcf;
+        // return (ltv - preLiquidationParams.preLltv).wDivDown(marketParams.lltv - preLiquidationParams.preLltv).wMulDown(
+        //     preLiquidationParams.preLCF2 - preLiquidationParams.preLCF1
+        // ) + preLiquidationParams.preLCF1;
     }
 
     function _preLIF(PreLiquidationParams memory preLiquidationParams, uint256 ltv) internal view returns (uint256) {
-        return (ltv - preLiquidationParams.preLltv).wDivDown(marketParams.lltv - preLiquidationParams.preLltv).wMulDown(
-            preLiquidationParams.preLIF2 - preLiquidationParams.preLIF1
-        ) + preLiquidationParams.preLIF1;
+        (uint256 preLif, uint256 preLcf) = riskOracle.getRiskParameters();
+        return preLif;
+        // return (ltv - preLiquidationParams.preLltv).wDivDown(marketParams.lltv - preLiquidationParams.preLltv).wMulDown(
+        //     preLiquidationParams.preLIF2 - preLiquidationParams.preLIF1
+        // ) + preLiquidationParams.preLIF1;
     }
 
     function _getBorrowBounds(
