@@ -35,4 +35,10 @@ library ErrorsLib {
     /* PRELIQUIDATION FACTORY ERRORS */
 
     error ZeroAddress();
+
+    /* ATLAS PRELIQUIDATION ERRORS */
+
+    error PreLCFNotEqual();
+
+    error PreLIFNotEqual();
 }

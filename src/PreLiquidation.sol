@@ -101,6 +101,11 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         require(_preLiquidationParams.preLIF2 <= WAD.wDivDown(_marketParams.lltv), ErrorsLib.PreLIFTooHigh());
         // TODO preLCF1 should == preLCF2, and preLIF1 should = preLIF2 always in our design
 
+        //Atlas design change
+        require(_preLiquidationParams.preLCF1 == _preLiquidationParams.preLCF2, ErrorsLib.PreLCFNotEqual());
+        require(_preLiquidationParams.preLIF1 == _preLiquidationParams.preLIF2, ErrorsLib.PreLIFNotEqual());
+
+
         MORPHO = IMorpho(morpho);
 
         ID = id;
