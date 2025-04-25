@@ -143,21 +143,21 @@ contract BaseTest is Test {
         loanToken.approve(address(preLiquidation), type(uint256).max);
     }
 
-    function _closeFactor(PreLiquidationParams memory preLiquidationParams, uint256 ltv)
+    function _closeFactor(PreLiquidationParams memory, uint256)
         internal
         view
         returns (uint256)
     {
-        (uint256 preLif, uint256 preLcf) = riskOracle.getRiskParameters();
+        (, uint256 preLcf) = riskOracle.getRiskParameters();
         return preLcf;
         // return (ltv - preLiquidationParams.preLltv).wDivDown(marketParams.lltv - preLiquidationParams.preLltv).wMulDown(
         //     preLiquidationParams.preLCF2 - preLiquidationParams.preLCF1
         // ) + preLiquidationParams.preLCF1;
     }
 
-    function _preLIF(PreLiquidationParams memory preLiquidationParams, uint256 ltv) internal view returns (uint256) {
-        (uint256 preLif, uint256 preLcf) = riskOracle.getRiskParameters();
-        return preLif;
+    function _preLIF(PreLiquidationParams memory, uint256) internal view returns (uint256) {
+        (, uint256 preLcf) = riskOracle.getRiskParameters();
+        return preLcf;
         // return (ltv - preLiquidationParams.preLltv).wDivDown(marketParams.lltv - preLiquidationParams.preLltv).wMulDown(
         //     preLiquidationParams.preLIF2 - preLiquidationParams.preLIF1
         // ) + preLiquidationParams.preLIF1;
