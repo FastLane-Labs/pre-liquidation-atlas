@@ -37,7 +37,7 @@ contract PreLiquidationErrorTest is BaseTest {
         });
 
         vm.expectRevert(ErrorsLib.PreLltvTooHigh.selector);
-        factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
     }
 
     function testLCFDecreasing(PreLiquidationParams memory preLiquidationParams) public virtual {
@@ -54,7 +54,7 @@ contract PreLiquidationErrorTest is BaseTest {
         preLiquidationParams.preLCF2 = bound(preLiquidationParams.preLCF2, 0, preLiquidationParams.preLCF1 - 1);
 
         vm.expectRevert(ErrorsLib.PreLCFDecreasing.selector);
-        factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
     }
 
     function testLCFHigh(PreLiquidationParams memory preLiquidationParams) public virtual {
@@ -70,7 +70,7 @@ contract PreLiquidationErrorTest is BaseTest {
         });
 
         vm.expectRevert(ErrorsLib.PreLCFTooHigh.selector);
-        factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
     }
 
     function testLowPreLIF(PreLiquidationParams memory preLiquidationParams) public virtual {
@@ -86,7 +86,7 @@ contract PreLiquidationErrorTest is BaseTest {
         });
 
         vm.expectRevert(ErrorsLib.PreLIFTooLow.selector);
-        factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
     }
 
     function testHighPreLIF(PreLiquidationParams memory preLiquidationParams) public virtual {
@@ -104,7 +104,7 @@ contract PreLiquidationErrorTest is BaseTest {
             bound(preLiquidationParams.preLIF2, WAD.wDivDown(marketParams.lltv) + 1, type(uint256).max);
 
         vm.expectRevert(ErrorsLib.PreLIFTooHigh.selector);
-        factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
     }
 
     function testPreLIFDecreasing(PreLiquidationParams memory preLiquidationParams) public virtual {
@@ -122,12 +122,12 @@ contract PreLiquidationErrorTest is BaseTest {
         preLiquidationParams.preLIF2 = bound(preLiquidationParams.preLIF2, WAD, preLiquidationParams.preLIF1 - 1);
 
         vm.expectRevert(ErrorsLib.PreLIFDecreasing.selector);
-        factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
     }
 
     function testNonexistentMarket(PreLiquidationParams memory preLiquidationParams) public virtual {
         vm.expectRevert(ErrorsLib.NonexistentMarket.selector);
-        factory.createPreLiquidation(Id.wrap(bytes32(0)), preLiquidationParams, address(0));
+        factory.createPreLiquidation(Id.wrap(bytes32(0)), preLiquidationParams, address(riskOracle));
     }
 
     function testInconsistentInput(
@@ -146,7 +146,7 @@ contract PreLiquidationErrorTest is BaseTest {
             preLiqOracle: marketParams.oracle
         });
 
-        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
 
         seizedAssets = bound(seizedAssets, 1, type(uint256).max);
         repaidShares = bound(repaidShares, 1, type(uint256).max);
@@ -161,13 +161,13 @@ contract PreLiquidationErrorTest is BaseTest {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
-        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
 
         vm.expectRevert(ErrorsLib.InconsistentInput.selector);
         preLiquidation.preLiquidate(BORROWER, 0, 0, hex"");
@@ -179,13 +179,13 @@ contract PreLiquidationErrorTest is BaseTest {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
-        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(0));
+        preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
 
         vm.expectRevert(ErrorsLib.NotMorpho.selector);
         IMorphoRepayCallback(address(preLiquidation)).onMorphoRepay(0, hex"");
@@ -201,9 +201,9 @@ contract PreLiquidationErrorTest is BaseTest {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -234,9 +234,9 @@ contract PreLiquidationErrorTest is BaseTest {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -272,9 +272,9 @@ contract PreLiquidationErrorTest is BaseTest {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
