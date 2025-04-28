@@ -115,7 +115,6 @@ contract BaseTest is Test {
         uint256 borrowAmount,
         address liquidator
     ) internal {
-        console.log("riskOracle", address(riskOracle));
         preLiquidation = factory.createPreLiquidation(id, preLiquidationParams, address(riskOracle));
 
         loanToken.mint(SUPPLIER, borrowAmount);

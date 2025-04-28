@@ -268,14 +268,14 @@ contract PreLiquidationErrorTest is BaseTest {
         uint256 seizedAssets
     ) public virtual {
         vm.prank(riskFactorOperator);
-        riskOracle.setRiskParameters(WAD, WAD / 100);
+        riskOracle.setRiskParameters(WAD, WAD);
 
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
-            minPreLCF: WAD / 100,
-            maxPreLCF: WAD / 100,
+            minPreLCF: WAD,
+            maxPreLCF: WAD,
             minPreLIF: WAD,
             maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
@@ -303,11 +303,10 @@ contract PreLiquidationErrorTest is BaseTest {
             market.totalBorrowAssets, market.totalBorrowShares
         ).mulDivUp(preLIF, WAD).mulDivUp(ORACLE_PRICE_SCALE, collateralPrice);
         seizedAssets = bound(seizedAssets, upperSeizedAssetBound, type(uint128).max);
+
         uint256 seizedAssetsQuoted = seizedAssets.mulDivUp(collateralPrice, ORACLE_PRICE_SCALE);
         uint256 repaidShares =
             seizedAssetsQuoted.wDivUp(preLIF).toSharesUp(market.totalBorrowAssets, market.totalBorrowShares);
-        console.log("repaidShares", repaidShares);
-        console.log("repayableShares", repayableShares);
         vm.assume(repaidShares > repayableShares);
         vm.expectRevert(
             abi.encodeWithSelector(ErrorsLib.PreLiquidationTooLarge.selector, repaidShares, repayableShares)
