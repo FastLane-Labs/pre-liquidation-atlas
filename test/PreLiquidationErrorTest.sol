@@ -27,12 +27,12 @@ contract PreLiquidationErrorTest is BaseTest {
     function testHighPreLltv(PreLiquidationParams memory preLiquidationParams) public virtual {
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
-            minPreLltv: marketParams.lltv,
+            minPreLltv: marketParams.lltv + 1,
             maxPreLltv: type(uint256).max,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -140,9 +140,9 @@ contract PreLiquidationErrorTest is BaseTest {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -267,6 +267,9 @@ contract PreLiquidationErrorTest is BaseTest {
         uint256 borrowAmount,
         uint256 seizedAssets
     ) public virtual {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 100,
@@ -299,14 +302,13 @@ contract PreLiquidationErrorTest is BaseTest {
         uint256 upperSeizedAssetBound = (repayableShares + 1).toAssetsUp(
             market.totalBorrowAssets, market.totalBorrowShares
         ).mulDivUp(preLIF, WAD).mulDivUp(ORACLE_PRICE_SCALE, collateralPrice);
-
         seizedAssets = bound(seizedAssets, upperSeizedAssetBound, type(uint128).max);
-
         uint256 seizedAssetsQuoted = seizedAssets.mulDivUp(collateralPrice, ORACLE_PRICE_SCALE);
         uint256 repaidShares =
             seizedAssetsQuoted.wDivUp(preLIF).toSharesUp(market.totalBorrowAssets, market.totalBorrowShares);
+        console.log("repaidShares", repaidShares);
+        console.log("repayableShares", repayableShares);
         vm.assume(repaidShares > repayableShares);
-
         vm.expectRevert(
             abi.encodeWithSelector(ErrorsLib.PreLiquidationTooLarge.selector, repaidShares, repayableShares)
         );

@@ -99,7 +99,6 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         require(WAD <= _preLiquidationParams.preLIF1, ErrorsLib.PreLIFTooLow());
         require(_preLiquidationParams.preLIF1 <= _preLiquidationParams.preLIF2, ErrorsLib.PreLIFDecreasing());
         require(_preLiquidationParams.preLIF2 <= WAD.wDivDown(_marketParams.lltv), ErrorsLib.PreLIFTooHigh());
-        // TODO preLCF1 should == preLCF2, and preLIF1 should = preLIF2 always in our design
 
         //Atlas design change
         require(_preLiquidationParams.preLCF1 == _preLiquidationParams.preLCF2, ErrorsLib.PreLCFNotEqual());
@@ -161,7 +160,7 @@ contract PreLiquidation is IPreLiquidation, IMorphoRepayCallback {
         uint256 borrowed = uint256(position.borrowShares).toAssetsUp(market.totalBorrowAssets, market.totalBorrowShares);
 
         // The two following require-statements ensure that collateralQuoted is different from zero.
-        // TODO: verify what happens if we remove this line, I think it would just allow pre liquidations
+    // TODO: verify what happens if we remove this line, I think it would just allow pre liquidations
         // on already unhealthy positions in Morpho. We should be fine to leave this since we expect the position
         // to still be healthy on Morpho because we have only updated the Pre Liquidation Oracle at this point. 
         require(borrowed <= collateralQuoted.wMulDown(LLTV), ErrorsLib.LiquidatablePosition());

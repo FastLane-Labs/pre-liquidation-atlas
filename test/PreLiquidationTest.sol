@@ -38,14 +38,17 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
         uint256 borrowAmount,
         uint256 newPrice
     ) public virtual {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 2,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -79,14 +82,17 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
         uint256 collateralAmount,
         uint256 borrowAmount
     ) public virtual {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -121,14 +127,17 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
         uint256 collateralAmount,
         uint256 borrowAmount
     ) public virtual {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -169,14 +178,17 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
         uint256 collateralAmount,
         uint256 borrowAmount
     ) public virtual {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -214,14 +226,17 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
     function testPreLiquidationWithInterest(PreLiquidationParams memory preLiquidationParams, uint256 collateralAmount)
         public
     {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         preLiquidationParams = boundPreLiquidationParameters({
             preLiquidationParams: preLiquidationParams,
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: marketParams.oracle
         });
 
@@ -259,6 +274,9 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
         uint256 collateralAmount,
         uint256 borrowAmount
     ) public virtual {
+        vm.prank(riskFactorOperator);
+        riskOracle.setRiskParameters(WAD, WAD / 100);
+
         OracleMock customOracle = new OracleMock();
         customOracle.setPrice(2 * IOracle(marketParams.oracle).price());
 
@@ -267,9 +285,9 @@ contract PreLiquidationTest is BaseTest, IPreLiquidationCallback {
             minPreLltv: WAD / 100,
             maxPreLltv: marketParams.lltv - 1,
             minPreLCF: WAD / 100,
-            maxPreLCF: WAD,
+            maxPreLCF: WAD / 100,
             minPreLIF: WAD,
-            maxPreLIF: WAD.wDivDown(lltv),
+            maxPreLIF: WAD,
             preLiqOracle: address(customOracle)
         });
 
